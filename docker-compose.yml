@@ -1,0 +1,30 @@
+# 文件路径: docker-compose.yml (已修复端口映射)
+version: '3.8'
+
+services:
+  livestream:
+    build: .
+    container_name: live_stream_service
+    environment:
+      # 【必须配置】你的 YouTube 直播推流码
+      - YOUTUBE_STREAM_KEY=sj4k-udvd-w1uk-syxu-9epy
+      
+      # 【必须配置】设置一个安全的 API 密钥，用于认证
+      - API_KEY=66666
+      
+      # 【可选配置】画面更新的间隔时间（单位：秒）
+      - UPDATE_INTERVAL_SECONDS=300
+      
+      # 【可选配置】轮询状态文件的路径
+      - STATE_FILE_PATH=last_index.txt
+      
+    volumes:
+      # 将主机上的文件映射到容器内部，实现热更新和持久化
+      - ./app/nodes.txt:/app/nodes.txt
+      - ./app/last_index.txt:/app/last_index.txt
+      
+    ports:
+      # 【已修复】将服务器的 8066 端口，正确映射到容器内部的 8000 端口
+      - "8066:8000"
+      
+    restart: unless-stopped
