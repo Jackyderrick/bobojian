@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>节点直播监控</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- 标题区域 -->
+        <header>
+            <h1>节点直播监控</h1>
+            <p class="update-time">最后更新: {{ update_time }}</p>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main>
+            <!-- QR码区域 -->
+            <div class="qr-container">
+                {% if qr_code_base64 %}
+                <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="节点链接QR码" class="qr-code">
+                {% else %}
+                <div class="error-message">无法生成QR码</div>
+                {% endif %}
+            </div>
+            
+            <!-- 节点信息区域 -->
+            <div class="node-info">
+                <h2>节点信息 #{{ index }} / {{ total }}</h2>
+                
+                {% if node_info %}
+                <table>
+                    <tr>
+                        <th>类型</th>
+                        <td>{{ node_info.type | upper }}</td>
+                    </tr>
+                    <tr>
+                        <th>服务器</th>
+                        <td>{{ node_info.server }}</td>
+                    </tr>
+                    <tr>
+                        <th>端口</th>
+                        <td>{{ node_info.port }}</td>
+                    </tr>
+                    {% if node_info.method %}
+                    <tr>
+                        <th>加密方式</th>
+                        <td>{{ node_info.method }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>名称</th>
+                        <td>{{ node_info.tag or '未命名' }}</td>
+                    </tr>
+                    <tr>
+                        <th>地区</th>
+                        <td>
+                            {% if is_china %}
+                            <span class="china-flag">中国</span>
+                            {% else %}
+                            <span class="foreign-flag">国外</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+                {% else %}
+                <div class="error-message">无法解析节点信息</div>
+                {% endif %}
+            </div>
+        </main>
+        
+        <!-- 页脚 -->
+        <footer>
+            <p>自动更新间隔: {{ update_interval }}秒</p>
+        </footer>
+    </div>
+</body>
+</html>
