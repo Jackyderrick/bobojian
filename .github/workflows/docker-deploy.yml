@@ -1,0 +1,32 @@
+# 工作流名称
+name: 自动构建并推送 Docker 镜像
+
+# 触发条件：当代码推送到 main 分支时触发
+on:
+  push:
+    branches: [ main ]  # 可改为你的目标分支（如 master、dev）
+
+# 工作流任务
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest  # 运行环境（GitHub 提供的 Ubuntu 服务器）
+    
+    steps:
+      # 步骤 1：拉取 GitHub 仓库的代码到运行环境
+      - name: 拉取代码
+        uses: actions/checkout@v4  # GitHub 官方的「拉取代码」动作
+        
+      # 步骤 2：设置 Docker 构建环境（安装 Docker 并登录）
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3  # Docker 官方的「登录」动作
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}  # 引用仓库保密凭证
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      # 步骤 3：构建 Docker 镜像（按你的 Dockerfile 配置）
+      - name: 构建并推送 Docker 镜像
+        uses: docker/build-push-action@v5  # Docker 官方的「构建+推送」动作
+        with:
+          context: .  # 构建上下文（当前仓库根目录，即 Dockerfile 所在目录）
+          push: true  # 启用「推送镜像到 Docker Hub」
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/bobojian:latest  # 镜像标签（格式：用户名/仓库名:版本）
