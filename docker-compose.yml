@@ -10,7 +10,7 @@ services:
       - YOUTUBE_STREAM_KEY=sj4k-udvd-w1uk-syxu-9epy
       
       # 【必须配置】设置一个安全的 API 密钥，用于认证
-      - API_KEY=66666
+      - API_KEY=ji2022109678
       
       # 【可选配置】画面更新的间隔时间（单位：秒）
       - UPDATE_INTERVAL_SECONDS=300
@@ -27,4 +27,5 @@ services:
       # 【已修复】将服务器的 8066 端口，正确映射到容器内部的 8000 端口
       - "8066:8000"
       
+
     restart: unless-stopped
