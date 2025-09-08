@@ -1,0 +1,133 @@
+/* 文件路径: live-stream-project/app/templates/style.css
+   作用: 定义直播画面的视觉样式 */
+
+/* 全局设置 */
+body {
+    font-family: 'Noto Sans SC', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: #333;
+    overflow: hidden;
+}
+
+/* 容器 */
+.container {
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+/* 头部 */
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+    font-size: 2.5rem;
+}
+
+.update-time {
+    color: #666;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* 主内容区 */
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    height: calc(100% - 12rem);
+}
+
+/* QR码容器 */
+.qr-container {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.qr-code {
+    width: 300px;
+    height: 300px;
+}
+
+/* 节点信息 */
+.node-info {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    min-width: 400px;
+}
+
+.node-info h2 {
+    color: #2c3e50;
+    margin-top: 0;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.8rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    width: 30%;
+    color: #666;
+    font-weight: 600;
+}
+
+td {
+    width: 70%;
+    word-break: break-all;
+}
+
+/* 地区标识 */
+.china-flag {
+    color: #e74c3c;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    background-color: #ffebee;
+    border-radius: 4px;
+}
+
+.foreign-flag {
+    color: #27ae60;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+}
+
+/* 错误信息 */
+.error-message {
+    color: #e74c3c;
+    padding: 1rem;
+    background-color: #ffebee;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* 页脚 */
+footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.9rem;
+}
