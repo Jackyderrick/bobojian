@@ -1,0 +1,9 @@
+# 文件路径: live-stream-project/app/requirements.txt
+# 项目所需Python库
+playwright
+Jinja2
+qrcode
+Pillow
+requests
+fastapi
+uvicorn

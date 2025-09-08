@@ -1,0 +1,8 @@
+# 文件路径: live-stream-project/app/nodes.txt
+# 节点链接配置文件，支持SS、VMess、VLESS、Trojan
+# 以#开头的行为注释，会被忽略
+# 格式：每行一个节点链接
+
+# 示例节点
+ss://YWVzLTI1Ni1nY206ZmFrZXBhc3N3b3Jk@1.1.1.1:443#示例节点-SS
+vmess://eyJhZGQiOiAid3d3LmJhaWR1LmNvbSIsICJwb3J0IjogIjQ0MyIsICJ2IjogIjIiLCAicHMiOiAi示例节点-Vmess
