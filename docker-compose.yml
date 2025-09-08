@@ -1,31 +1,34 @@
-# 文件路径: docker-compose.yml (已修复端口映射)
+# 文件路径: docker-compose.yml (最终服务器部署版)
 version: '3.8'
 
 services:
   livestream:
+    # build: . 会告诉 Portainer 在当前代码仓库的根目录下寻找 Dockerfile 来构建镜像
     build: .
     container_name: live_stream_service
+    
     environment:
-      # 【必须配置】你的 YouTube 直播推流码
-      - YOUTUBE_STREAM_KEY=sj4k-udvd-w1uk-syxu-9epy
+      # --- 变量引用 ---
+      # 下面的 ${...} 语法会读取您在 Portainer 界面上设置的环境变量值。
+      # 这样可以确保您的密钥不会被保存在 Git 仓库中，更加安全。
+      - YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY}
+      - API_KEY=${API_KEY}
       
-      # 【必须配置】设置一个安全的 API 密钥，用于认证
-      - API_KEY=ji2022109678
-      
-      # 【可选配置】画面更新的间隔时间（单位：秒）
-      - UPDATE_INTERVAL_SECONDS=300
-      
-      # 【可选配置】轮询状态文件的路径
-      - STATE_FILE_PATH=last_index.txt
+      # 为可选配置提供默认值。如果在 Portainer 中未设置，则使用冒号后面的值。
+      - UPDATE_INTERVAL_SECONDS=${UPDATE_INTERVAL_SECONDS:-300}
+      - STATE_FILE_PATH=${STATE_FILE_PATH:-last_index.txt}
       
     volumes:
-      # 将主机上的文件映射到容器内部，实现热更新和持久化
+      # 将主机上的配置文件映射到容器内部，实现热更新和持久化。
+      # Portainer 会处理相对路径，通常是相对于 Git 仓库的根目录。
       - ./app/nodes.txt:/app/nodes.txt
       - ./app/last_index.txt:/app/last_index.txt
       
     ports:
-      # 【已修复】将服务器的 8066 端口，正确映射到容器内部的 8000 端口
-      - "8066:8000"
+      # 端口映射 -> "服务器对外端口:容器内部端口"
+      # 【注意】容器内部端口必须是 8000。
+      # 您可以根据需要自由修改左侧的服务器端口（例如改成 8001, 8888 等）。
+      - "8088:8000"
       
-
+    # 容器重启策略：除非手动停止，否则在出错时会自动重启。
     restart: unless-stopped
