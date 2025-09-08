@@ -1,150 +1,79 @@
-# 文件路径: live-stream-project/app/node_parser.py
-# 作用: 解析各种节点链接（SS, Vmess, VLESS, Trojan）
-
 import base64
 import json
 import logging
 from urllib.parse import urlparse, unquote, parse_qs
 
-# 配置日志
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def robust_b64decode(s):
+    """
+    一个更健壮的 Base64 解码函数，可以处理常见的 padding 错误。
+    """
+    # 尝试直接解码
+    try:
+        return base64.urlsafe_b64decode(s)
+    except (base64.binascii.Error, ValueError):
+        # 如果失败，尝试补全 padding 再解码
+        padding = '=' * (-len(s) % 4)
+        return base64.urlsafe_b64decode(s + padding)
 
 def parse_ss_link(link):
-    """解析SS链接"""
+    """解析 SS 链接"""
     try:
-        # 移除协议前缀
-        link = link[5:]
-        
-        # 处理包含#的情况
-        if '#' in link:
-            link, tag = link.split('#', 1)
-            tag = unquote(tag)
+        link_body = link[5:]
+        parts = link_body.split('#')
+        main_part = parts[0]
+        remark = unquote(parts[1]) if len(parts) > 1 else "Unknown"
+
+        if '@' not in main_part:
+             decoded_part = robust_b64decode(main_part).decode('utf-8', errors='ignore')
         else:
-            tag = ""
-            
-        # 解码
-        if len(link) % 4 != 0:
-            link += '=' * (4 - len(link) % 4)
-            
-        decoded = base64.urlsafe_b64decode(link).decode('utf-8')
+            decoded_part = main_part
+
+        creds_part, server_part = decoded_part.split('@')
+        host, port = server_part.split(':')
         
-        # 解析加密方式、密码、地址和端口
-        if '@' in decoded:
-            method_pass, addr_port = decoded.split('@', 1)
-            method, password = method_pass.split(':', 1)
-            if ':' in addr_port:
-                server, port = addr_port.split(':', 1)
-                port = int(port)
-            else:
-                server = addr_port
-                port = 8388  # 默认端口
-        else:
-            # 处理旧格式
-            server_port, method_pass = decoded.split(':', 1)
-            server, port = server_port.split(':', 1)
-            port = int(port)
-            method, password = method_pass.split(':', 1)
-            
-        return {
-            'type': 'ss',
-            'server': server,
-            'port': port,
-            'method': method,
-            'password': password,
-            'tag': tag
-        }
+        return {"host": host, "port": int(port), "type": "SS", "location": remark, "qr_content": link}
     except Exception as e:
-        logging.error(f"解析SS链接失败: {link[:50]}..., 错误: {e}")
+        logging.error(f"解析 SS 链接失败: {link[:30]}..., 错误: {e}")
         return None
 
 def parse_vmess_link(link):
-    """解析VMess链接"""
+    """解析 Vmess 链接"""
     try:
-        # 移除协议前缀并解码
-        link = link[8:]
-        if len(link) % 4 != 0:
-            link += '=' * (4 - len(link) % 4)
-            
-        decoded = base64.urlsafe_b64decode(link).decode('utf-8')
-        data = json.loads(decoded)
+        base64_str = link[8:]
+        decoded_json = robust_b64decode(base64_str).decode('utf-8', errors='ignore')
+        data = json.loads(decoded_json)
         
-        return {
-            'type': 'vmess',
-            'server': data.get('add', ''),
-            'port': data.get('port', 443),
-            'id': data.get('id', ''),
-            'alterId': data.get('aid', 0),
-            'security': data.get('scy', 'auto'),
-            'network': data.get('net', 'tcp'),
-            'tag': data.get('ps', '')
-        }
+        return {"host": data.get('add', ''), "port": int(data.get('port', 0)), "type": "Vmess", "location": data.get('ps', 'Unknown'), "qr_content": link}
     except Exception as e:
-        logging.error(f"解析VMess链接失败: {link[:50]}..., 错误: {e}")
+        logging.error(f"解析 VMess 链接失败: {link[:30]}..., 错误: {e}")
         return None
 
+# ... (parse_vless_link 和 parse_trojan_link 保持不变, 但为完整性也一并提供) ...
+
 def parse_vless_link(link):
-    """解析VLESS链接"""
     try:
-        # 移除协议前缀
-        parsed = urlparse(link)
-        userinfo = parsed.netloc.split('@')[0] if '@' in parsed.netloc else ''
-        netloc = parsed.netloc.split('@')[1] if '@' in parsed.netloc else parsed.netloc
-        
-        server = netloc.split(':')[0] if ':' in netloc else netloc
-        port = int(netloc.split(':')[1]) if ':' in netloc else 443
-        
-        # 解析查询参数
-        params = parse_qs(parsed.query)
-        
-        return {
-            'type': 'vless',
-            'server': server,
-            'port': port,
-            'id': userinfo,
-            'encryption': params.get('encryption', ['none'])[0],
-            'network': params.get('net', ['tcp'])[0],
-            'tag': unquote(parsed.fragment) if parsed.fragment else ''
-        }
+        parsed_url = urlparse(link); query_params = parse_qs(parsed_url.query); host = parsed_url.hostname; port = parsed_url.port; remark = unquote(parsed_url.fragment) if parsed_url.fragment else "Unknown"
+        if 'host' in query_params: host = query_params['host'][0]
+        elif 'sni' in query_params: host = query_params['sni'][0]
+        return {"host": host, "port": int(port), "type": "VLESS", "location": remark, "qr_content": link}
     except Exception as e:
-        logging.error(f"解析VLESS链接失败: {link[:50]}..., 错误: {e}")
+        logging.error(f"解析 VLESS 链接失败: {link[:30]}..., 错误: {e}")
         return None
 
 def parse_trojan_link(link):
-    """解析Trojan链接"""
     try:
-        # 移除协议前缀
-        parsed = urlparse(link)
-        password = parsed.netloc.split('@')[0] if '@' in parsed.netloc else ''
-        netloc = parsed.netloc.split('@')[1] if '@' in parsed.netloc else parsed.netloc
-        
-        server = netloc.split(':')[0] if ':' in netloc else netloc
-        port = int(netloc.split(':')[1]) if ':' in netloc else 443
-        
-        return {
-            'type': 'trojan',
-            'server': server,
-            'port': port,
-            'password': password,
-            'tag': unquote(parsed.fragment) if parsed.fragment else ''
-        }
+        parsed_url = urlparse(link); query_params = parse_qs(parsed_url.query); host = parsed_url.hostname; port = parsed_url.port; remark = unquote(parsed_url.fragment) if parsed_url.fragment else "Unknown"; host_for_ping = query_params.get('sni', [host])[0]
+        return {"host": host_for_ping, "port": int(port), "type": "Trojan", "location": remark, "qr_content": link}
     except Exception as e:
-        logging.error(f"解析Trojan链接失败: {link[:50]}..., 错误: {e}")
+        logging.error(f"解析 Trojan 链接失败: {link[:30]}..., 错误: {e}")
         return None
 
 def parse_link(link):
-    """根据链接前缀选择合适的解析器"""
     link = link.strip()
-    if not link or link.startswith('#'):
-        return None
-        
-    if link.startswith('ss://'):
-        return parse_ss_link(link)
-    elif link.startswith('vmess://'):
-        return parse_vmess_link(link)
-    elif link.startswith('vless://'):
-        return parse_vless_link(link)
-    elif link.startswith('trojan://'):
-        return parse_trojan_link(link)
-    else:
-        logging.warning(f"不支持的链接格式: {link[:30]}...")
-        return None
+    if not link or link.startswith('#'): return None
+    if link.startswith('ss://'): return parse_ss_link(link)
+    if link.startswith('vmess://'): return parse_vmess_link(link)
+    if link.startswith('vless://'): return parse_vless_link(link)
+    if link.startswith('trojan://'): return parse_trojan_link(link)
+    logging.warning(f"检测到不支持的链接格式: {link[:30]}...")
+    return None
