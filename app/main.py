@@ -1,5 +1,5 @@
 # 文件路径: app/main.py
-# 最终服务器部署版，优化了启动逻辑，增强了稳定性。
+# 最终服务器部署版，包含所有函数的完整实现和诊断日志功能。
 
 import os
 import time
@@ -61,8 +61,6 @@ async def update_nodes(request: Request, payload: NodeUpdateRequest):
 def run_livestream_loop():
     ffmpeg_process = None
     
-    # 【优化】不再单独生成初始画面，直接进入主循环
-    # 循环内的 try...except 机制足以处理所有错误
     while True:
         try:
             logging.info("开始新一轮画面更新...")
@@ -161,13 +159,15 @@ def take_screenshot(html_content, output_path):
     os.rename(temp_output_path, output_path)
 
 def start_ffmpeg_stream():
+    logging.info("正在启动 FFmpeg 推流 (诊断模式)...")
     command = [
         'ffmpeg', '-re', '-framerate', '10', '-loop', '1', '-i', SCREENSHOT_PATH,
         '-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p',
         '-s', '1920x1080', '-b:v', '2500k', '-maxrate', '3000k', '-bufsize', '5000k',
         '-g', '50', '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-f', 'flv', RTMP_URL
     ]
-    return subprocess.Popen(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # 在诊断阶段，我们不屏蔽日志，以便在 Portainer 中看到 FFmpeg 的详细输出
+    return subprocess.Popen(command)
 
 # --- 6. 程序主入口 ---
 if __name__ == "__main__":
